@@ -1,0 +1,44 @@
+---> To Build: 
+
+1. Go to the src folder inside assn1/src/
+2. type make - It should succesfully compile. 
+3. run by typing ./floader 
+
+---> Requirements: 
+0. Make sure that you have the directory containing the .model file in the same
+directory as the executable. 
+0.5 View Preferably only in 800 x 600 .. 
+1. You may pass the name of the model as an argument to the program like
+./floader 478Model/test.model . If nothing is passed, then a default path, i.e.
+478Model/TechnologyEnterpriseFacility_Gregor.model is assumed which comes with
+this src package. 
+2. Built only for OS X 10.5.8 
+3. No guarantees it will work on Linux ... 
+4. Built using GLUT ON OS X ... GLUT/glut.h 
+
+---> On Screen: 
+
+Launching the program you will see both a teapot and the actual building model
+loaded side by side. You can rotate around the scene using the arrow keys ... 
+
+---> Controls : 
+PAN IN/OUT & EXIT
+0. 'q' to exit
+1. 'z' to zoom in 
+2. 'a' to zoom out 
+
+CAMERA MOVEMENT
+3. UP Arrow Key  to move the camera in a circle upwards around the origin. 
+4. DOWN Arrow Key to move the camera in a circle downwards looking at the
+origin. 
+5. LEFT Arrow Key to move the camera in a circle leftwards looking at the
+origin. 
+6. RIGHT Arrow Key to move the camera in a circle rightwards looking at the
+origin. 
+
+ROTATION
+7. Move the mouse while holding the left button to see the teapot rotate. 
+
+TRANSLATION
+8. 'w' to move the teapot forwards towards -z
+9. 's' to move the teapot backwards towards +z 
