@@ -1,17 +1,10 @@
-#include <iostream>
-#include <sstream>
-#include <fstream>
-using namespace std ; 
-
-#ifndef PARSER
-#define PARSER
-
+#ifndef FILEPARSER_H
+#define FILEPARSER_H
 #define DEBUG 0 
-
-const int DEF_SIZE_FOR_VERTICES = 100 ; 
-const int DEF_SIZE_FOR_TRIANGLES = 100 ;  
-const int DEF_SIZE_FOR_TEXTURES = 50 ; 
-const int DEF_SIZE_FOR_COORDS = 100 ; 
+const int DEF_SIZE_FOR_VERTICES = 300 ; 
+const int DEF_SIZE_FOR_TRIANGLES = 300 ;  
+const int DEF_SIZE_FOR_TEXTURES = 300 ; 
+const int DEF_SIZE_FOR_COORDS = 300 ; 
 
 class FileParser{
 public: 
@@ -62,7 +55,9 @@ public:
           // Tokenize the string further to figure out the rest of the details
           istringstream values_on_line(token) ; 
           if(strncmp(type_of_data.substr(0,8).c_str(),"textures",8) == 0){
+            cout << "FILE IS " << token <<endl ; 
             texture_file_names[num_of_textures++] = token ;  
+            cout << "FILE IS 2 " << texture_file_names[num_of_textures - 1] <<endl ;  
           }else if(strncmp(type_of_data.substr(0,4).c_str(),"name",4) == 0){
             name = new char[token.size()+1]; 
             strcpy(name,token.c_str());
@@ -130,13 +125,85 @@ int getNumOfTextures(){
 int getNumOfTriangles(){
   return num_of_triangles;  
 }
+unsigned char *Read(const std::string &filename, int &width, int &height)
+{
+	FILE *ifp;
+	char buffer[80];
+	int i;
+	int header[3]; // width, height, maxval
+	int tmp;
+
+	// Warning - Number of references to this class might cause problems when reading images
+	  
+	ifp = fopen(filename.c_str(), "rb");
+	if( !ifp ) {
+    cout <<"Test"<<endl ; 
+		cout << "Error opening file " << filename << endl ; 
+		throw std::string("Error opening file \"") + filename + std::string("\"");
+	}
+    cout <<"Test2"<<endl ; 
+	  
+	i = 0;
+	fgets(buffer, 80, ifp);
+	if( strncmp(buffer, "P6", 2) ) {
+		fclose(ifp);
+		throw std::string("File is not in valid PPM format");
+	}
+
+	while( (i < 3) ) {
+		if( (tmp=fgetc(ifp)) == '#' ) {
+		fgets(buffer, 80, ifp); // read out comment
+		continue;
+		} else {
+		ungetc(tmp, ifp);
+		fscanf(ifp, "%d", &header[i++]);
+		}
+	}
+	fgets(buffer, 80, ifp); // read to newline
+
+	// Renew image
+	width = header[0];
+	height = header[1];
+	unsigned char *img = new unsigned char[width*height*3];
+
+	fread(img, 3, width * height, ifp);
+	  
+	fclose(ifp);
+	return img;
+}
+
+int LoadTextures(){
+  if(!num_of_textures)
+    return -1 ; 
+
+  cout << "Total num_of_textures is "<< num_of_textures << endl ; 
+  cout << "Loading .. " << texture_file_names[0] << endl ; 
+  int width,height,i ; 
+
+  // Create unique ID's for all textures that will be used. 
+  glGenTextures(num_of_textures,ids) ; 
+
+  for(i=0 ; i < num_of_textures ; i++){
+    unsigned char * texarr ; 
+    cout << "Loading .. " << texture_file_names[i].c_str() << endl ; 
+    texarr = Read(texture_file_names[i].c_str(),width,height) ; 
+
+    // Associate properties with each texture. 
+    glBindTexture(GL_TEXTURE_2D,ids[i]) ; 
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,GL_REPEAT) ; 
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,GL_REPEAT) ; 
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,GL_LINEAR) ; 
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_LINEAR) ; 
+    glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,width,height,0,GL_RGB,GL_UNSIGNED_BYTE,texarr) ; 
+
+  }
+  return 1 ; 
+}
 
 void buildModelBuilding(){
-  glColor3f(1.0,0.0,0.0) ; 
   int num_of_vertices = getNumOfVertices() ; 
   int num_of_triangles = getNumOfTriangles() ; 
   int num_of_textures = getNumOfTextures() ; 
-  float changeInColor = 0.2 ; 
 
   Vec3f vertices[num_of_vertices] ; 
   Vec3f triangles[num_of_triangles] ; 
@@ -144,19 +211,17 @@ void buildModelBuilding(){
   getListOfVertices(vertices) ; 
   getListOfTriangles(triangles) ; 
 
-
   // for each triangle
   glPushMatrix() ; 
   for(int i=0 ; i < num_of_triangles ; i++){
-    changeInColor += 0.002 ; 
-    glColor3f(changeInColor,0.0,0.0) ; 
-  
+
     // grab it's index to the vertex and the coordinates from it. 
     int index0 = (int)triangles[i][0] ; 
     int index1 = (int)triangles[i][1] ; 
     int index2 = (int)triangles[i][2] ; 
   
     Vec3f ver_0,ver_1,ver_2 ; 
+
     ver_0[0] = vertices[index0][0] ; 
     ver_0[1] = vertices[index0][1] ; 
     ver_0[2] = vertices[index0][2] ; 
@@ -169,12 +234,39 @@ void buildModelBuilding(){
     ver_2[1] = vertices[index2][1] ; 
     ver_2[2] = vertices[index2][2] ; 
 
+    // Print the normals. 
+    Vec3f norm_vec_a,norm_vec_b,result;
+    norm_vec_a = ver_1 - ver_0 ;  
+    norm_vec_b = ver_2 - ver_1 ;  
+    normalize(norm_vec_a) ; 
+    normalize(norm_vec_b) ; 
+    result = cross(norm_vec_a,norm_vec_b);  
+    //cout << "Triangle " << index0 <<"," << index1 <<"," << index2 << " .. normal is : " << result[0] << "," << result[1] << "," << result[2] <<endl ;  
+   
+    // Enable texturing
+    if(num_of_textures > 0){
+      glEnable(GL_TEXTURE_2D) ; 
+      glTexEnvf(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_REPLACE) ; 
+      glBindTexture(GL_TEXTURE_2D,ids[texture_to_use[i]]) ; 
+    }
+
     // draw the triangle. 
     glBegin(GL_TRIANGLES);
+      glNormal3d(normals[i][0],normals[i][1],normals[i][2]) ; 
+
+      glTexCoord2d(texture_coords_0[i][0],texture_coords_0[i][1]) ; 
       glVertex3f(ver_0[0], ver_0[1], ver_0[2]) ; 
+
+      glTexCoord2d(texture_coords_1[i][0],texture_coords_1[i][1]) ; 
       glVertex3f(ver_1[0], ver_1[1], ver_1[2]) ; 
+
+      glTexCoord2d(texture_coords_2[i][0],texture_coords_2[i][1]) ; 
       glVertex3f(ver_2[0], ver_2[1], ver_2[2]) ; 
     glEnd(); 
+
+    // Disable texturing
+    glDisable(GL_TEXTURE_2D) ; 
+
   }
   glPopMatrix() ; 
 }
@@ -229,6 +321,7 @@ private:
 	Vec2f texture_coords_1[DEF_SIZE_FOR_COORDS] ; 
 	Vec2f texture_coords_2[DEF_SIZE_FOR_COORDS] ; 
   char * name ; 
+  GLuint ids[50] ; 
 };
 /*
 struct Ray{

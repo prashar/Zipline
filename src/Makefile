@@ -14,7 +14,7 @@ LDIR =../lib
 LIBS=-lm -framework OpenGL -framework GLUT
 _DEPS=fileparser.h vec.h
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
-_OBJ=main.o 
+_OBJ=PPM.o main.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 $(ODIR)/%.o: %.cpp $(DEPS)

@@ -4,8 +4,15 @@
 #include <cstdlib> 
 #include <cmath>
 #include <vector>
+
+#include <iostream>
+#include <sstream>
+#include <fstream>
+
 #include "vec.h"
+using namespace std ; 
 #include "fileparser.h"
+
 
 #define c_winheight 600 
 #define c_winwidth 800 
@@ -14,9 +21,6 @@
 #define far 1000
 #define N_ROWS 100 
 #define N_COLS 100
-
-
-using namespace std; 
 
 // Define global variable to capture rotation
 GLfloat g_theta[3] = {0.0,0.0,0.0} ; 
@@ -83,7 +87,7 @@ void buildTeapot(){
   glTranslatef(-3,0.8,variable) ; 
   glRotatef(x_obj_rot,1.0,0.0,0.0) ; 
   glRotatef(y_obj_rot,0.0,1.0,0.0) ; 
-  glColor3f(.1,0,1) ; 
+  //glColor3f(.1,0,1) ; 
   glutSolidTeapot(1) ; 
   glPopMatrix() ; 
 }
@@ -134,7 +138,7 @@ void display(void){
   // Called whenever something needs to be redrawn on the screen 
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glLoadIdentity() ; 
-  gluLookAt(0,8,12,0,0,0,0,1,0); 
+  gluLookAt(0,12,12,0,0,0,0,1,0); 
 
   // The camera rotates around the objects in the scene with this setting 
   // The camera rotates around it's central axis if I switch the order of lookat
@@ -156,7 +160,7 @@ void display(void){
   drawOrigin();
 
   // Draw Teapot
-  buildTeapot() ; 
+  //buildTeapot() ; 
 
   // Draw the building 
   parser.buildModelBuilding() ; 
@@ -254,6 +258,9 @@ int main(int argc, char *argv[]){
   glClearColor(0,0,0,0) ; 
   // Rescale all normal vectors to have a magnitude of 1 
   glEnable(GL_NORMALIZE) ; 
+  // Need this line below..uncomment before handing
+  glEnable(GL_CULL_FACE) ; 
+  // glFrontFace(GL_BACK) ; 
 
   if(argv[1] == NULL){
     fname = "478Model/TechnologyEnterpriseFacility_Gregor.model" ; 
@@ -263,6 +270,7 @@ int main(int argc, char *argv[]){
   
   // Load parser file .. 
   parser.Load(fname) ; 
+  parser.LoadTextures() ; 
 
   // Infinite loop 
   glutMainLoop() ; 

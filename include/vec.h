@@ -198,8 +198,8 @@ typedef Vec<6,unsigned char>  Vec6uc;
 template<unsigned int N, class T>
 T mag2(const Vec<N,T> &a)
 {
-   T l=sqr(a.v[0]);
-   for(unsigned int i=1; i<N; ++i) l+=sqr(a.v[i]);
+   T l= ( (a.v[0]) * (a.v[0]) );
+   for(unsigned int i=1; i<N; ++i) l+= ( (a.v[i]) * (a.v[i]) );
    return l;
 }
 
@@ -210,8 +210,8 @@ T mag(const Vec<N,T> &a)
 template<unsigned int N, class T> 
 inline T dist2(const Vec<N,T> &a, const Vec<N,T> &b)
 { 
-   T d=sqr(a.v[0]-b.v[0]);
-   for(unsigned int i=1; i<N; ++i) d+=sqr(a.v[i]-b.v[i]);
+   T d=( (a.v[0]-b.v[0]) * (a.v[0]-b.v[0]) );
+   for(unsigned int i=1; i<N; ++i) d+=( (a.v[i]-b.v[i]) *  (a.v[i]-b.v[i]) );
    return d;
 }
 
